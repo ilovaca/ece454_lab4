@@ -30,6 +30,9 @@ template<class Ele, class Keytype> class hash {
   Ele *lookup_and_insert_if_absent(Keytype key);
 };
 
+/*This method looks up the key and will insert the key if absent.
+ It provides mutually exclusive access to the lists
+*/
 template<class Ele, class Keytype> 
 Ele * hash<Ele,Keytype>::lookup_and_insert_if_absent(Keytype key){
   unsigned list_index = HASH_INDEX(key,my_size_mask);

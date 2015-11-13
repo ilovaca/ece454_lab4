@@ -85,22 +85,12 @@ main(int argc, char *argv[]) {
     // according to the number of threads, we start threads
     for (int i = 0; i < num_threads; ++i)
     {
-    	/*There are two ways to pass arguments to the worker function
-			1. pass the argument as an "address", but at the worker function
-			side we don't dereference it, instead we cast it into the desired 
-			type --> pointer casting is extremely error prone!
-			2. we dynamically allocate a variable and pass the pointer to the
-			worker function, and delete it INSIDE the function
-    	*/
+    
     	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
     	unsigned long* arg = new unsigned long;
     	*arg = (NUM_SEED_STREAMS / num_threads);
     	std::cout<<"argument value: "<<*arg<<std::endl;
     	pthread_create(&workers[i], nullptr, worker_function, arg);
-    	// this is probably a data race here, when I passed the argument 
-    	// to the thread worker, the arg may have already been deleted 
-    	// in the line below
-    	/*delete arg;*/
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
@@ -140,21 +130,9 @@ void* worker_function(void* num_streams){
 
             // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
             key = rnum % RAND_NUM_UPPER_BOUND;
-
-            // Entering critical section, lock
-            pthread_mutex_lock(&mutex);
-
-            if (!(s = h.lookup(key))) {
-
-                // insert a new element for it into the hash table
-                s = new sample(key);
-                h.insert(s);
-            }
-            // exiting the critical section
-            pthread_mutex_unlock(&mutex);
-            // increment the count for the sample
-            s->count++;
-		}	
+            
+            h.lookup_and_insert_if_absent(key);
+        }	
 	}
 	delete(temp);
 	return nullptr;
