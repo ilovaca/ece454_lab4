@@ -27,7 +27,7 @@ team_t team = {
 unsigned num_threads;
 unsigned samples_to_skip;
 // the worker function that completes a portion of the samples
-void* worker_function(void* num_streams);
+void* worker_function(unsigned* num_streams);
 // global mutex lock
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
