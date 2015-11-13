@@ -86,7 +86,7 @@ main(int argc, char *argv[]) {
     {
     	unsigned* arg = new unsigned;
     	*arg = (NUM_SEED_STREAMS / num_threads);
-    	pthread_create(&workers[i], NULL, worker_function, );
+    	pthread_create(&workers[i], NULL, worker_function, arg);
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
