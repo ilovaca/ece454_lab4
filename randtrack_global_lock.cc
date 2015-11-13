@@ -109,10 +109,10 @@ void* worker_function(void* num_streams){
 	unsigned key;
 	// num_streams = (unsigned*) num_streams;
 	// unsigned long numStreams = (unsigned long) num_streams;
-	unsigned numStreams = *((unsigned*) num_streams);
+	unsigned long numStreams = *((unsigned long*) num_streams);
 	// num_streams = static_cast<unsigned*> (num_streams);
 	for (int i = 0; i < numStreams; i++) {
-		int rnum = ii;
+		int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
 
