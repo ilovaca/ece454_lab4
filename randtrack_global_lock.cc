@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <iostream>
 #include "defs.h"
 #include "hash.h"
 
@@ -86,6 +87,7 @@ main(int argc, char *argv[]) {
     {
     	unsigned* arg = new unsigned;
     	*arg = (NUM_SEED_STREAMS / num_threads);
+    	std::cout<<"argument value: "<<*arg<<std::endl;
     	pthread_create(&workers[i], NULL, worker_function, arg);
     	delete arg;
     }
