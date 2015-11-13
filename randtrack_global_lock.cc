@@ -27,7 +27,7 @@ team_t team = {
 unsigned num_threads;
 unsigned samples_to_skip;
 // the worker function that completes a portion of the samples
-void worker_function(void* num_streams);
+void* worker_function(void* num_streams);
 // global mutex lock
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -103,7 +103,7 @@ main(int argc, char *argv[]) {
  The critical section is the insertion of the key, we need 
  a mutex here to lock the hash table!
 */
-void worker_function(unsigned * num_streams){
+void* worker_function(unsigned * num_streams){
 	sample* s = nullptr;
 	unsigned key;
 	// num_streams = (unsigned*) num_streams;
@@ -137,4 +137,5 @@ void worker_function(unsigned * num_streams){
 		}	
 	}
 	delete(num_streams);
+	return nullptr;
 }
