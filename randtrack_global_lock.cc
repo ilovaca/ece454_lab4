@@ -85,10 +85,18 @@ main(int argc, char *argv[]) {
     // according to the number of threads, we start threads
     for (int i = 0; i < num_threads; ++i)
     {
-    	// unsigned long* arg = new unsigned long;
-    	// *arg = (NUM_SEED_STREAMS / num_threads);
-    	// std::cout<<"argument value: "<<*arg<<std::endl;
-    	pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
+    	/*There are two ways to pass arguments to the worker function
+			1. pass the argument as an "address", but at the worker function
+			side we don't dereference it, instead we cast it into the desired 
+			type --> pointer casting is extremely error prone!
+			2. we dynamically allocate a variable and pass the pointer to the
+			worker function, and delete it INSIDE the function
+    	*/
+    	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
+    	unsigned long* arg = new unsigned long;
+    	*arg = (NUM_SEED_STREAMS / num_threads);
+    	std::cout<<"argument value: "<<*arg<<std::endl;
+    	pthread_create(&workers[i], nullptr, worker_function, arg);
     	// this is probably a data race here, when I passed the argument 
     	// to the thread worker, the arg may have already been deleted 
     	// in the line below
@@ -104,19 +112,21 @@ main(int argc, char *argv[]) {
 }
 
 
-// we need to have functions that partitions the workload
-/* this function runs the NUM_SEED_SAMPLE/num_threads parts
+/* this function runs some number of streams of samples spcified 
+ in the num_streams parameter.
  The critical section is the insertion of the key, we need 
  a mutex here to lock the hash table!
 */
 void* worker_function(void* num_streams){
 	sample* s = nullptr;
 	unsigned key;
-	// num_streams = (unsigned*) num_streams;
+	// the line below is where we interpret the address just as a regular variable, No dereferencing
 	// unsigned long numStreams = (unsigned long) num_streams;
-	// unsigned long numStreams = *((unsigned long*) num_streams);
-	unsigned long numStreams = (unsigned long) num_streams;
-	// num_streams = static_cast<unsigned long*> (num_streams);
+
+	// num_streams = (unsigned*) num_streams;
+	auto temp = static_cast<unsigned long*>(num_streams);
+	auto numStreams = *(temp);
+		
 	for (int i = 0; i < numStreams; i++) {
 		std::cout<<"at "<<i<<"th stream"<<std::endl;
 		int rnum = i;
@@ -146,6 +156,6 @@ void* worker_function(void* num_streams){
             s->count++;
 		}	
 	}
-	// delete(num_streams);
+	delete(temp);
 	return nullptr;
 } 

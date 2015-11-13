@@ -1,7 +1,7 @@
 
 CC = g++-4.9
 CFLAGS = -O3 -std=c++11
-PTHREAD_ENABLE = -lpthread
+PTHREAD_ENABLE = -lpthread -pthread
 TM_ENABLE = -fgnu-tm
 
 all: randtrack 
