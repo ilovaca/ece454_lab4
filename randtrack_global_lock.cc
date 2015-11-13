@@ -87,6 +87,7 @@ main(int argc, char *argv[]) {
     	unsigned* arg = new unsigned;
     	*arg = (NUM_SEED_STREAMS / num_threads);
     	pthread_create(&workers[i], NULL, worker_function, arg);
+    	delete arg;
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
@@ -109,9 +110,9 @@ void* worker_function(void* num_streams){
 	// num_streams = (unsigned*) num_streams;
 	// unsigned long numStreams = (unsigned long) num_streams;
 	unsigned numStreams = *((unsigned*) num_streams);
-	num_streams = static_cast<unsigned*> (num_streams);
+	// num_streams = static_cast<unsigned*> (num_streams);
 	for (int i = 0; i < numStreams; i++) {
-		int rnum = i;
+		int rnum = ii;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
 
@@ -138,6 +139,6 @@ void* worker_function(void* num_streams){
             pthread_mutex_unlock(&mutex);
 		}	
 	}
-	delete(num_streams);
+	// delete(num_streams);
 	return nullptr;
 } 
