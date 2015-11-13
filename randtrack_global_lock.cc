@@ -84,12 +84,14 @@ main(int argc, char *argv[]) {
     // according to the number of threads, we start threads
     for (int i = 0; i < num_threads; ++i)
     {
-    	pthread_create(&workers[i], NULL, worker_function, (void *) (NUM_SEED_STREAMS / num_threads));
+    	unsigned* arg = new unsigned;
+    	*arg = (NUM_SEED_STREAMS / num_threads);
+    	pthread_create(&workers[i], NULL, worker_function, );
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
     {
-    	pthread_join(workers[i]);
+    	pthread_join(workers[i], NULL);
     }
 
     h.print();
@@ -101,12 +103,12 @@ main(int argc, char *argv[]) {
  The critical section is the insertion of the key, we need 
  a mutex here to lock the hash table!
 */
-void worker_function(void* num_streams){
+void worker_function(unsigned* num_streams){
 	sample* s = nullptr;
 	unsigned key;
 
-	unsigned long numStreams = (unsigned long) num_streams;
-	for (int i = 0; i < numStreams; i++) {
+	// unsigned long numStreams = (unsigned long) num_streams;
+	for (int i = 0; i < *num_streams; i++) {
 		int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
@@ -132,5 +134,7 @@ void worker_function(void* num_streams){
             // increment the count for the sample
             s->count++;
             pthread_mutex_unlock(&mutex);
+		}	
 	}
+	delete(num_streams);
 }
