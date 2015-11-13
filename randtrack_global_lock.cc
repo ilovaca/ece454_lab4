@@ -86,7 +86,7 @@ main(int argc, char *argv[]) {
     {
     	unsigned* arg = new unsigned;
     	*arg = (NUM_SEED_STREAMS / num_threads);
-    	pthread_create(&workers[i], NULL, worker_function, arg);
+    	pthread_create(&workers[i], NULL, worker_function, (void *) arg);
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
@@ -103,10 +103,10 @@ main(int argc, char *argv[]) {
  The critical section is the insertion of the key, we need 
  a mutex here to lock the hash table!
 */
-void worker_function(unsigned* num_streams){
+void worker_function(void * num_streams){
 	sample* s = nullptr;
 	unsigned key;
-
+	num_streams = (unsigned*) num_streams;
 	// unsigned long numStreams = (unsigned long) num_streams;
 	for (int i = 0; i < *num_streams; i++) {
 		int rnum = i;
