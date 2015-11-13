@@ -27,9 +27,9 @@ team_t team = {
 unsigned num_threads;
 unsigned samples_to_skip;
 // the worker function that completes a portion of the samples
-void worker(int num_samples);
+void worker_function(void* num_streams);
 // global mutex lock
-pthread_mutex_t mutex;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 class sample;
 
@@ -79,12 +79,12 @@ main(int argc, char *argv[]) {
     h.setup(14);
 
     // initializing the mutex lock
-    pthread_mutex_init(&mutex, NULL);
+    // pthread_mutex_init(&mutex, NULL);
 
     // according to the number of threads, we start threads
     for (int i = 0; i < num_threads; ++i)
     {
-    	pthread_create(&workers[i], NULL, worker, (void *) (NUM_SEED_STREAMS / num_threads));
+    	pthread_create(&workers[i], NULL, worker_function, (void *) (NUM_SEED_STREAMS / num_threads));
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
@@ -94,11 +94,18 @@ main(int argc, char *argv[]) {
 
     h.print();
 }
-    // process streams starting with different initial numbers
-    for (i = 0; i < NUM_SEED_STREAMS; i++) {
-        rnum = i;
 
-        // collect a number of samples
+
+// we need to have functions that partitions the workload
+/* this function runs the NUM_SEED_SAMPLE/num_threads parts
+ The critical section is the insertion of the key, we need 
+ a mutex here to lock the hash table!
+*/
+void worker_function(void* num_streams){
+	num_streams = (unsigned) num_threads;
+	for (int i = 0; i < num_streams; i++) {
+		rnum = i;
+        // For each stream, we collect a number of samples
         for (j = 0; j < SAMPLES_TO_COLLECT; j++) {
 
             // skip a number of samples
@@ -109,7 +116,9 @@ main(int argc, char *argv[]) {
             // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
             key = rnum % RAND_NUM_UPPER_BOUND;
 
-            // if this sample has not been counted before
+            // Entering critical section, lock
+            pthread_mutex_lock(&mutex);
+
             if (!(s = h.lookup(key))) {
 
                 // insert a new element for it into the hash table
@@ -119,22 +128,6 @@ main(int argc, char *argv[]) {
 
             // increment the count for the sample
             s->count++;
-        }
-    }
-
-
-    // print a list of the frequency of all samples
-    h.print();
-}
-
-
-// we need to have functions that partitions the workload
-/* this function runs the NUM_SEED_SAMPLE/num_threads parts
- The critical section is the insertion of the key, we need 
- a mutex here to lock the hash table!
-*/
-void worker(int num_samples){
-	for (int i = 0; i < num_samples; i++) {
-		for (int j = 0; j < )
+            pthread_mutex_unlock(&mutex);
 	}
 }
