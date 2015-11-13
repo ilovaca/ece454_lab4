@@ -109,6 +109,7 @@ void* worker_function(void* num_streams){
 	// num_streams = (unsigned*) num_streams;
 	// unsigned long numStreams = (unsigned long) num_streams;
 	unsigned numStreams = *((unsigned*) num_streams);
+	num_streams = static_cast<unsigned*> (num_streams);
 	for (int i = 0; i < numStreams; i++) {
 		int rnum = i;
         // For each stream, we collect a number of samples
@@ -139,4 +140,4 @@ void* worker_function(void* num_streams){
 	}
 	delete(num_streams);
 	return nullptr;
-}
+} 
