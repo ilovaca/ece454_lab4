@@ -85,11 +85,14 @@ main(int argc, char *argv[]) {
     // according to the number of threads, we start threads
     for (int i = 0; i < num_threads; ++i)
     {
-    	unsigned* arg = new unsigned;
+    	unsigned long* arg = new unsigned;
     	*arg = (NUM_SEED_STREAMS / num_threads);
     	std::cout<<"argument value: "<<*arg<<std::endl;
     	pthread_create(&workers[i], NULL, worker_function, arg);
-    	delete arg;
+    	// this is probably a data race here, when I passed the argument 
+    	// to the thread worker, the arg may have already been deleted 
+    	// in the line below
+    	/*delete arg;*/
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
@@ -112,7 +115,7 @@ void* worker_function(void* num_streams){
 	// num_streams = (unsigned*) num_streams;
 	// unsigned long numStreams = (unsigned long) num_streams;
 	unsigned long numStreams = *((unsigned long*) num_streams);
-	// num_streams = static_cast<unsigned*> (num_streams);
+	num_streams = static_cast<unsigned long*> (num_streams);
 	for (int i = 0; i < numStreams; i++) {
 		std::cout<<"at "<<i<<"th stream"<<std::endl;
 		int rnum = i;
@@ -142,6 +145,6 @@ void* worker_function(void* num_streams){
             pthread_mutex_unlock(&mutex);
 		}	
 	}
-	// delete(num_streams);
+	delete(num_streams);
 	return nullptr;
 } 
