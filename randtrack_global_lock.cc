@@ -105,8 +105,8 @@ void worker_function(void* num_streams){
 	sample* s = nullptr;
 	unsigned key;
 
-	num_streams = (unsigned long) num_threads;
-	for (int i = 0; i < num_streams; i++) {
+	unsigned long numStreams = (unsigned long) num_streams;
+	for (int i = 0; i < numStreams; i++) {
 		int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
