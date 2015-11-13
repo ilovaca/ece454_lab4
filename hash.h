@@ -32,7 +32,7 @@ template<class Ele, class Keytype> class hash {
 
 template<class Ele, class Keytype> 
 Ele * hash<Ele,Keytype>::lookup_and_insert_if_absent(Keytype key){
-  unsigned list_index = HASH_INDEX(the_key,my_size_mask);
+  unsigned list_index = HASH_INDEX(key,my_size_mask);
   // we only lock the list that we are accessing
   pthread_mutex_lock(&list_locks[list_index]);
   auto kp = entries[list_index].lookup(key);
@@ -55,12 +55,11 @@ hash<Ele,Keytype>::setup(unsigned the_size_log){
   my_size = 1 << my_size_log;
   my_size_mask = (1 << my_size_log) - 1;
   entries = new list<Ele,Keytype>[my_size];
-  array_size = my_size;
   // we will have a lock for each of the lists in the hashtable
-  list_locks = new pthread_mutex_t[array_size];
+  list_locks = new pthread_mutex_t[my_size];
   // initialize all locks
-  for (auto & thread : list_locks) {
-    thread = PTHREAD_MUTEX_INITIALIZER;
+  for (int i = 0; i < my_size; i++) {
+    list_locks[i] = PTHREAD_MUTEX_INITIALIZER;
   }
 }
 
