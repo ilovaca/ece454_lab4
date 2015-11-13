@@ -89,7 +89,7 @@ main(int argc, char *argv[]) {
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
     {
-    	pthread_join(worker[i]);
+    	pthread_join(workers[i]);
     }
 
     h.print();
@@ -102,14 +102,17 @@ main(int argc, char *argv[]) {
  a mutex here to lock the hash table!
 */
 void worker_function(void* num_streams){
-	num_streams = (unsigned) num_threads;
+	sample* s = nullptr;
+	unsigned key;
+
+	num_streams = (unsigned long) num_threads;
 	for (int i = 0; i < num_streams; i++) {
-		rnum = i;
+		int rnum = i;
         // For each stream, we collect a number of samples
-        for (j = 0; j < SAMPLES_TO_COLLECT; j++) {
+        for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
 
             // skip a number of samples
-            for (k = 0; k < samples_to_skip; k++) {
+            for (int k = 0; k < samples_to_skip; k++) {
                 rnum = rand_r((unsigned int *) &rnum);
             }
 
