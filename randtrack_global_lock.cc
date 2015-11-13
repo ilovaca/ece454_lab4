@@ -88,7 +88,7 @@ main(int argc, char *argv[]) {
     	// unsigned long* arg = new unsigned long;
     	// *arg = (NUM_SEED_STREAMS / num_threads);
     	// std::cout<<"argument value: "<<*arg<<std::endl;
-    	pthread_create(&workers[i], NULL, worker_function, (void*) (NUM_SEED_STREAMS / num_threads));
+    	pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
     	// this is probably a data race here, when I passed the argument 
     	// to the thread worker, the arg may have already been deleted 
     	// in the line below
