@@ -65,7 +65,17 @@ main(int argc, char *argv[]) {
     sample *s;
 
     // deleted Print out team information
-    //
+    // Print out team information
+    // printf("Team Name: %s\n", team.team);
+    // printf("\n");
+    // printf("Student 1 Name: %s\n", team.name1);
+    // printf("Student 1 Student Number: %s\n", team.number1);
+    // printf("Student 1 Email: %s\n", team.email1);
+    // printf("\n");
+    // printf("Student 2 Name: %s\n", team.name2);
+    // printf("Student 2 Student Number: %s\n", team.number2);
+    // printf("Student 2 Email: %s\n", team.email2);
+    // printf("\n");
     // Parse program argumentadditionals
     if (argc != 3) {
         printf("Usage: %s <num_threads> <samples_to_skip>\n", argv[0]);
@@ -89,7 +99,7 @@ main(int argc, char *argv[]) {
     	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
     	unsigned long* arg = new unsigned long;
     	*arg = (NUM_SEED_STREAMS / num_threads);
-    	std::cout<<"argument value: "<<*arg<<std::endl;
+    	// std::cout<<"argument value: "<<*arg<<std::endl;
     	pthread_create(&workers[i], nullptr, worker_function, arg);
     }
     // wait until they are all done with their work
@@ -118,7 +128,7 @@ void* worker_function(void* num_streams){
 	auto numStreams = *(temp);
 		
 	for (int i = 0; i < numStreams; i++) {
-		std::cout<<"at "<<i<<"th stream"<<std::endl;
+		// std::cout<<"at "<<i<<"th stream"<<std::endl;
 		int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {

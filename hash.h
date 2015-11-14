@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include "list.h"
-
+#include <pthread.h>
 #define HASH_INDEX(_addr,_size_mask) (((_addr) >> 2) & (_size_mask))
 
 // unsigned array_size = 0;
@@ -42,7 +42,7 @@ Ele * hash<Ele,Keytype>::lookup_and_insert_if_absent(Keytype key){
   if (kp == nullptr) {
     // key does not exist
     kp = new Ele(key);
-    entries[list_index].insert(kp);
+    entries[list_index].push(kp);
     kp->count++;
   } else {
     kp->count++;
