@@ -27,8 +27,10 @@ team_t team = {
 
 unsigned num_threads;
 unsigned samples_to_skip;
+
 // the worker function that completes a portion of the samples
-void* worker_function(void* ith_slice);
+void *worker_function(void *ith_slice);
+
 // global mutex lock
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -93,31 +95,29 @@ main(int argc, char *argv[]) {
     // pthread_mutex_init(&mutex, NULL);
 
     // according to the number of threads, we start threads
-    for (unsigned long i = 0; i < num_threads; ++i)
-    {
-    	/*There are two ways to pass arguments to the worker function
-			1. pass the argument as an "address", but at the worker function
-			side we don't dereference it, instead we cast it into the desired 
-			type --> pointer casting is extremely error prone!
-			2. we dynamically allocate a variable and pass the pointer to the
-			worker function, and delete it INSIDE the function
-    	*/ 
-    	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
-    	// unsigned long* arg = new unsigned long;
-    	// *arg = (NUM_SEED_STREAMS / num_threads);
-    	// std::cout<<"argument value: "<<*arg<<std::endl;
-    	// *arg = i;
-    	// pthread_create(&workers[i], nullptr, worker_function, arg);
-    	pthread_create(&workers[i],nullptr, worker_function, (unsigned long*) i);
-    	// this is probably a data race here, when I passed the argument 
-    	// to the thread worker, the arg may have already been deleted 
-    	// in the line below
-    	/*delete arg;*/
+    for (unsigned long i = 0; i < num_threads; ++i) {
+        /*There are two ways to pass arguments to the worker function
+            1. pass the argument as an "address", but at the worker function
+            side we don't dereference it, instead we cast it into the desired
+            type --> pointer casting is extremely error prone!
+            2. we dynamically allocate a variable and pass the pointer to the
+            worker function, and delete it INSIDE the function
+        */
+        // pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
+        // unsigned long* arg = new unsigned long;
+        // *arg = (NUM_SEED_STREAMS / num_threads);
+        // std::cout<<"argument value: "<<*arg<<std::endl;
+        // *arg = i;
+        // pthread_create(&workers[i], nullptr, worker_function, arg);
+        pthread_create(&workers[i], nullptr, worker_function, (unsigned long *) i);
+        // this is probably a data race here, when I passed the argument
+        // to the thread worker, the arg may have already been deleted
+        // in the line below
+        /*delete arg;*/
     }
     // wait until they are all done with their work
-    for (int i = 0; i < num_threads; ++i)
-    {
-    	pthread_join(workers[i], NULL);
+    for (int i = 0; i < num_threads; ++i) {
+        pthread_join(workers[i], NULL);
     }
 
     h.print();
@@ -129,19 +129,19 @@ main(int argc, char *argv[]) {
  The critical section is the insertion of the key, we need 
  a mutex here to lock the hash table!
 */
-void* worker_function(void* ith_thread){
-	sample* s = nullptr;
-	unsigned key;
-	// the line below is where we interpret the address just as a regular variable, No dereferencing
-	// unsigned long numStreams = (unsigned long) num_streams;
-	// num_streams = (unsigned*) num_streams;
-	// auto temp = static_cast<unsigned long*>(num_streams);
-	// auto numStreams = *(temp);
-	auto ith_slice = (unsigned long) ith_thread;
-	auto slice_size = NUM_SEED_STREAMS / num_threads;
+void *worker_function(void *ith_thread) {
+    sample *s = nullptr;
+    unsigned key;
+    // the line below is where we interpret the address just as a regular variable, No dereferencing
+    // unsigned long numStreams = (unsigned long) num_streams;
+    // num_streams = (unsigned*) num_streams;
+    // auto temp = static_cast<unsigned long*>(num_streams);
+    // auto numStreams = *(temp);
+    auto ith_slice = (unsigned long) ith_thread;
+    auto slice_size = NUM_SEED_STREAMS / num_threads;
 
-	for (int i = ith_slice * slice_size; i < slice_size*(ith_slice + 1); i++) {
-		int rnum = i;
+    for (int i = ith_slice * slice_size; i < slice_size * (ith_slice + 1); i++) {
+        int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
 
@@ -166,9 +166,9 @@ void* worker_function(void* ith_thread){
             s->count++;
             // exiting the critical section
             pthread_mutex_unlock(&mutex);
-		}	
-	}
-	
-	// delete(temp);
-	return nullptr;
+        }
+    }
+
+    // delete(temp);
+    return nullptr;
 } 
