@@ -154,9 +154,9 @@ void* worker_function(void* num_streams){
                     s = new sample(key);
                     h.insert(s);
                 }
-            }
             // increment the count for the sample
             s->count++;
+            }
 		}	
 	}
 	delete(temp);

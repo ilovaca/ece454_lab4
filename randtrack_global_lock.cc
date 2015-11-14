@@ -104,7 +104,8 @@ main(int argc, char *argv[]) {
     	*/
     	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
     	unsigned long* arg = new unsigned long;
-    	*arg = (NUM_SEED_STREAMS / num_threads);
+    	// *arg = (NUM_SEED_STREAMS / num_threads);
+        *arg = i;
     	// std::cout<<"argument value: "<<*arg<<std::endl;
     	pthread_create(&workers[i], nullptr, worker_function, arg);
     	// this is probably a data race here, when I passed the argument 
@@ -161,9 +162,9 @@ void* worker_function(void* num_streams){
                 h.insert(s);
             }
             // exiting the critical section
-            pthread_mutex_unlock(&mutex);
             // increment the count for the sample
             s->count++;
+            pthread_mutex_unlock(&mutex);
 		}	
 	}
 	delete(temp);
