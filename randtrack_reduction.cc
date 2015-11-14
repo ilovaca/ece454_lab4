@@ -29,10 +29,9 @@ unsigned num_threads;
 unsigned samples_to_skip;
 // the worker function that completes a portion of the samples
 void* worker_function(void* num_streams);
-// global mutex lock
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
+void hash_reduction();
 class sample;
+void merge_hash(hash<sample, unsigned>* h1, hash<sample,unsigned>* h2);
 
 class sample {
     unsigned my_key;
@@ -55,7 +54,7 @@ public:
 // the element and key value here: element is "class sample" and
 // key value is "unsigned".  
 hash<sample, unsigned> h;
-
+hash<sample, unsigned>* private_hashes = nullptr;
 
 int
 main(int argc, char *argv[]) {
@@ -86,58 +85,56 @@ main(int argc, char *argv[]) {
 
     // define Pthreads
     pthread_t workers[num_threads];
+    private_hashes = new hash<sample, unsigned>[num_threads];
     // initialize a 16K-entry (2**14) hash of empty lists
     h.setup(14);
 
-    // initializing the mutex lock
-    // pthread_mutex_init(&mutex, NULL);
-
-    // according to the number of threads, we start threads
-    for (int i = 0; i < num_threads; ++i)
+    // create and start threads
+    for (unsigned long i = 0; i < num_threads; ++i)
     {
-    	/*There are two ways to pass arguments to the worker function
-			1. pass the argument as an "address", but at the worker function
-			side we don't dereference it, instead we cast it into the desired 
-			type --> pointer casting is extremely error prone!
-			2. we dynamically allocate a variable and pass the pointer to the
-			worker function, and delete it INSIDE the function
-    	*/
-    	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
-    	unsigned long* arg = new unsigned long;
-    	*arg = (NUM_SEED_STREAMS / num_threads);
-    	// std::cout<<"argument value: "<<*arg<<std::endl;
-    	pthread_create(&workers[i], nullptr, worker_function, arg);
-    	// this is probably a data race here, when I passed the argument 
-    	// to the thread worker, the arg may have already been deleted 
-    	// in the line below
-    	/*delete arg;*/
+        // setup each hash table for every thread
+        private_hashes[i].setup(14);
+    	pthread_create(&workers[i], nullptr, worker_function, (unsigned long*) i);
     }
     // wait until they are all done with their work
     for (int i = 0; i < num_threads; ++i)
     {
     	pthread_join(workers[i], NULL);
     }
-
+    // reduction part
+    if (num_threads == 1) {
+        h = hash_array[0];
+    }
+    else{
+        auto merged_hash = hash_reduction(private_hashes,0,num_threads - 1);
+        h = *merged_hash;
+    }
+    delete [] private_hashes;
     h.print();
 }
 
 
-/* this function runs some number of streams of samples spcified 
- in the num_streams parameter.
- The critical section is the insertion of the key, we need 
- a mutex here to lock the hash table!
-*/
-void* worker_function(void* num_streams){
+hash<sample,unsigned>* hash_reduction(hash<sample, unsigned>* hash_array, unsigned left, unsigned right) {
+    // if left == right then we've done merging the 
+    if (right - left <= 0) return hash_array;
+    unsigned mid = (left + right) / 2;
+    
+    merge_hash(hash_reduction(hash_array, left, mid),hash_reduction(hash_array, mid + 1, right));
+}
+
+void merge_hash(hash<sample, unsigned>* h1, hash<sample,unsigned>* h2){
+    if(h1 == nullptr || h2 == nullptr) return;
+    h1->merge(*(h2));
+}
+
+void* worker_function(void* ith_thread){
 	sample* s = nullptr;
 	unsigned key;
-	// the line below is where we interpret the address just as a regular variable, No dereferencing
-	// unsigned long numStreams = (unsigned long) num_streams;
 
-	// num_streams = (unsigned*) num_streams;
-	auto temp = static_cast<unsigned long*>(num_streams);
-	auto numStreams = *(temp);
-		
-	for (int i = 0; i < numStreams; i++) {
+    auto ith_slice = (unsigned long) ith_thread;
+	auto slice_size = NUM_SEED_STREAMS / num_threads;
+
+	for (int i = ith_slice * slice_size; i < slice_size*(ith_slice+1); i++) {
 		// std::cout<<"at "<<i<<"th stream"<<std::endl;
 		int rnum = i;
         // For each stream, we collect a number of samples
@@ -151,8 +148,6 @@ void* worker_function(void* num_streams){
             // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
             key = rnum % RAND_NUM_UPPER_BOUND;
 
-            // Entering critical section, lock
-            pthread_mutex_lock(&mutex);
 
             if (!(s = h.lookup(key))) {
 
@@ -160,12 +155,9 @@ void* worker_function(void* num_streams){
                 s = new sample(key);
                 h.insert(s);
             }
-            // exiting the critical section
-            pthread_mutex_unlock(&mutex);
-            // increment the count for the sample
             s->count++;
 		}	
 	}
-	delete(temp);
+	// delete(temp);
 	return nullptr;
 } 

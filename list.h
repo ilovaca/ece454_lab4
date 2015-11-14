@@ -32,7 +32,26 @@ public:
     void print(FILE *f = stdout);
 
     void cleanup();
+
+    void merge(list& other);
 };
+
+template<class Ele, class Keytype>
+void list<Ele, Keytype>::merge(list& other) {
+    for (auto p = other.my_head; p != nullptr; p = p -> next) {
+        auto key = p->key();
+        if (this->lookup(key) != nullptr) {
+            // the key in the other list exists in this list, we increment the count
+            this->lookup(key)->count += p->count; 
+        } else {
+            // the key does not exist in this list, so we create a new entry and insert it
+            auto new_ele = new Ele(key);
+            new_ele->count = p->count;
+            this->push(new_ele);
+        }
+    }
+}
+
 
 template<class Ele, class Keytype>
 void

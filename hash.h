@@ -38,7 +38,14 @@ public:
     void cleanup();
 
     Ele *lookup_and_insert_if_absent(Keytype key);
+
+    void merge(hash& other);
 };
+
+template<class Ele, class Keytype>
+void hash<Ele, Keytype>::merge(hash& other) {
+    
+}
 
 /*This method looks up the key and will insert the key if absent.
  It provides mutually exclusive access to the lists
