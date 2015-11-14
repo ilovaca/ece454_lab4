@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
 
     // according to the number of threads, we start threads
-    for (int i = 0; i < num_threads; ++i)
+    for (unsigned long i = 0; i < num_threads; ++i)
     {
     	/*There are two ways to pass arguments to the worker function
 			1. pass the argument as an "address", but at the worker function
@@ -99,10 +99,10 @@ int main(int argc, char *argv[]) {
 			worker function, and delete it INSIDE the function
     	*/
     	// pthread_create(&workers[i], NULL, worker_function, (void*) ((unsigned long)(NUM_SEED_STREAMS / num_threads)));
-    	unsigned long* arg = new unsigned long;
-    	*arg = (NUM_SEED_STREAMS / num_threads);
+    	// unsigned long* arg = new unsigned long;
+    	// *arg = (NUM_SEED_STREAMS / num_threads);
     	// std::cout<<"argument value: "<<*arg<<std::endl;
-    	pthread_create(&workers[i], nullptr, worker_function, arg);
+    	pthread_create(&workers[i], nullptr, worker_function, (unsigned long*)i);
     	// this is probably a data race here, when I passed the argument 
     	// to the thread worker, the arg may have already been deleted 
     	// in the line below
@@ -123,19 +123,20 @@ int main(int argc, char *argv[]) {
  The critical section is the insertion of the key, we need 
  a mutex here to lock the hash table!
 */
-void* worker_function(void* num_streams){
+void* worker_function(void* ith_thread){
 	sample* s = nullptr;
 	unsigned key;
 	// the line below is where we interpret the address just as a regular variable, No dereferencing
 	// unsigned long numStreams = (unsigned long) num_streams;
 
 	// num_streams = (unsigned*) num_streams;
-	auto temp = static_cast<unsigned long*>(num_streams);
-	auto numStreams = *(temp);
-		
-	for (int i = 0; i < numStreams; i++) {
-		// std::cout<<"at "<<i<<"th stream"<<std::endl;
-		int rnum = i;
+	// auto temp = static_cast<unsigned long*>(num_streams);
+	// auto numStreams = *(temp);
+	auto ith_slice = (unsigned long) ith_thread;
+    auto slice_size = NUM_SEED_STREAMS / num_threads;
+
+    for (int i = ith_slice * slice_size; i < slice_size*(ith_slice + 1); i++) {
+        int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
 
@@ -147,18 +148,19 @@ void* worker_function(void* num_streams){
             // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
             key = rnum % RAND_NUM_UPPER_BOUND;
 
-            // Entering critical section, lock
             __transaction_atomic{
-                if (!(s = h.lookup(key))) {
-                    // insert a new element for it into the hash table
-                    s = new sample(key);
-                    h.insert(s);
-                }
+            if (!(s = h.lookup(key))) {
+
+                // insert a new element for it into the hash table
+                s = new sample(key);
+                h.insert(s);
             }
             // increment the count for the sample
             s->count++;
-		}	
-	}
-	delete(temp);
+        }
+        }   
+    }
+
+	// delete(temp);
 	return nullptr;
 } 
