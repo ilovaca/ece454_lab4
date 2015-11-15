@@ -10,8 +10,8 @@ NUM_THREADS=4
 SAMPLES_TO_SKIP=50
 
 # base 
-randtrack 1 $SAMPLES_TO_SKIP > rt1.out
-sort -n rt1.out > rt1.outs
+# randtrack 1 $SAMPLES_TO_SKIP > rt1.out
+# sort -n rt1.out > rt1.outs
 
 if [ "$1" = "global" ] 
 then

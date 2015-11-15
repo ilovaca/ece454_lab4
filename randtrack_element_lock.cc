@@ -130,7 +130,7 @@ void *worker_function(void *ith_thread) {
 
 
             if (!(s = h.lookup_with_lock(key))) {
-                // insert a new element for it into the hash table
+                // this newly created sample is private to each thread
                 s = new sample(key);
                 h.insert_with_lock(s);
             }

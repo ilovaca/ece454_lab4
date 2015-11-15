@@ -136,9 +136,9 @@ template<class Ele, class Keytype>
 Ele *
 list<Ele, Keytype>::lookup_with_lock(Keytype the_key) {
     // first lock head
-    pthread_mutex_lock(&element_mutex_v.back());
+    pthread_mutex_lock(&head_lock);
     Ele *e_tmp = my_head;
-    pthread_mutex_unlock(&element_mutex_v.back());
+    pthread_mutex_unlock(&head_lock);
     int i = my_num_ele;
     while (e_tmp && (e_tmp->key() != the_key)) {
         pthread_mutex_lock(&element_mutex_v[i-1]);
