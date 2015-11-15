@@ -39,11 +39,37 @@ public:
 
     Ele *lookup_and_insert_if_absent(Keytype key);
 
-    void merge(hash& other);
+    void merge(hash *other);
 };
 
 template<class Ele, class Keytype>
-void hash<Ele, Keytype>::merge(hash& other) {
+void hash<Ele, Keytype>::merge(hash *other) {
+    if(!other) return;
+
+    int i;
+    list<Ele, Keytype> *l;
+    Ele *e, *my_e;
+    Keytype key;
+
+    for(i = 0; i < other->my_size; ++i) {
+	l = other->get_list(i);
+        if(l != NULL) {
+	    e = l->pop();
+	    
+	    while(e != NULL) {
+		key = e->key();
+		my_e = lookup(key);
+		if(!my_e) {
+		    insert(e);
+		}
+		else {
+		    my_e->count += e->count;
+		    delete e;
+		}
+		e = l->pop();
+	    }
+	}
+    }
     
 }
 

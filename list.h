@@ -2,7 +2,7 @@
 #define LIST_H
 
 #include <stdio.h>
-
+#include <iostream>
 template<class Ele, class Keytype>
 class list;
 
@@ -42,6 +42,7 @@ void list<Ele, Keytype>::merge(list& other) {
         auto key = p->key();
         if (this->lookup(key) != nullptr) {
             // the key in the other list exists in this list, we increment the count
+            std::cout<<this->lookup(key)<<std::endl;
             this->lookup(key)->count += p->count; 
         } else {
             // the key does not exist in this list, so we create a new entry and insert it

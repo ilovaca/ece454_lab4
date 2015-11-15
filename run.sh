@@ -4,13 +4,14 @@ make randtrack
 make randtrack_global_lock
 make randtrack_list_lock
 make randtrack_tm
-
+make randtrack_reduction
+# make randtrack_element_lock
 NUM_THREADS=4
-SAMPLES_TO_SKIP=1000
+SAMPLES_TO_SKIP=50
 
 # base 
-# randtrack 1 SAMPLES_TO_SKIP > rt1.out
-# sort -n rt1.out > rt1.outs
+randtrack 1 $SAMPLES_TO_SKIP > rt1.out
+sort -n rt1.out > rt1.outs
 
 if [ "$1" = "global" ] 
 then
@@ -36,4 +37,10 @@ then
 	randtrack_reduction $NUM_THREADS $SAMPLES_TO_SKIP > rt_reduction.out
 	sort -n rt_reduction.out > rt_reduction.outs
 	diff rt1.outs rt_reduction.outs > diff4.out
+elif [ "$1" = "reduction" ]
+then
+	echo -e "Element lock version, NUM_THREADS == $NUM_THREADS SAMPLES_TO_SKIP == $SAMPLES_TO_SKIP"
+	randtrack_element_lock $NUM_THREADS $SAMPLES_TO_SKIP > rt_element_lock.out
+	sort -n rt_element_lock.out > rt_element_lock.outs
+	diff rt1.outs rt_element_lock.outs > diff5.out
 fi

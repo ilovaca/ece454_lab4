@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <iostream>
 #include "defs.h"
 #include "hash.h"
 
@@ -13,7 +14,7 @@
  * Please fill in the following team struct 
  */
 team_t team = {
-        "AYYLMAO",                  /* Team name */
+        "Stupid Team",                  /* Team name */
 
         "Yeqi Shi",                    /* First member full name */
         "1000274277",                 /* First member student number */
@@ -27,7 +28,12 @@ team_t team = {
 unsigned num_threads;
 unsigned samples_to_skip;
 
-void *worker_function(void *num_streams);
+// the worker function that completes a portion of the samples
+void *worker_function(void *ith_slice);
+
+// global mutex lock
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 class sample;
 
 class sample {
@@ -51,7 +57,7 @@ public:
 // the element and key value here: element is "class sample" and
 // key value is "unsigned".  
 hash<sample, unsigned> h;
-hash<sample, unsigned> *h_table;
+
 
 int
 main(int argc, char *argv[]) {
@@ -60,6 +66,7 @@ main(int argc, char *argv[]) {
     unsigned key;
     sample *s;
 
+    // deleted Print out team information
     // Print out team information
     // printf("Team Name: %s\n", team.team);
     // printf("\n");
@@ -71,68 +78,73 @@ main(int argc, char *argv[]) {
     // printf("Student 2 Student Number: %s\n", team.number2);
     // printf("Student 2 Email: %s\n", team.email2);
     // printf("\n");
-
-    // Parse program arguments
+    // Parse program argumentadditionals
     if (argc != 3) {
         printf("Usage: %s <num_threads> <samples_to_skip>\n", argv[0]);
         exit(1);
     }
-    sscanf(argv[1], " %d", &num_threads); // not used in this single-threaded version
+    sscanf(argv[1], " %d", &num_threads);
     sscanf(argv[2], " %d", &samples_to_skip);
 
+    // define Pthreads
     pthread_t workers[num_threads];
-    h_table = new hash<sample,unsigned> [num_threads];
-    
     // initialize a 16K-entry (2**14) hash of empty lists
     h.setup(14);
 
+
     for (unsigned long i = 0; i < num_threads; ++i) {
-	h_table[i].setup(14);
-	pthread_create(&workers[i], NULL, worker_function, (unsigned long*) i);
+        
+        pthread_create(&workers[i], nullptr, worker_function, (unsigned long *) i);
+   
+    }
+    // wait until they are all done with their work
+    for (int i = 0; i < num_threads; ++i) {
+        pthread_join(workers[i], NULL);
     }
 
-    for (i = 0; i < num_threads; ++i) {
-	pthread_join(workers[i], NULL);
-    }
-
-    for (i = 0; i < num_threads; ++i) {
-	h.merge(&h_table[i]);
-    }
-
-    // print a list of the frequency of all samples
     h.print();
 }
-void* worker_function(void* ith_thread){
-    sample* s = nullptr;
+
+
+/* this function runs some number of streams of samples spcified 
+ in the num_streams parameter.
+ The critical section is the insertion of the key, we need 
+ a mutex here to lock the hash table!
+*/
+void *worker_function(void *ith_thread) {
+    sample *s = nullptr;
     unsigned key;
     
-    int ith_slice = (unsigned long) ith_thread;
-    int slice_size = NUM_SEED_STREAMS / num_threads;
-    
-    for (int i = ith_slice * slice_size; i < slice_size*(ith_slice+1); i++) {
-	// std::cout<<"at "<<i<<"th stream"<<std::endl;
-	int rnum = i;
+    auto ith_slice = (unsigned long) ith_thread;
+    auto slice_size = NUM_SEED_STREAMS / num_threads;
+
+    for (int i = ith_slice * slice_size; i < slice_size * (ith_slice + 1); i++) {
+        int rnum = i;
         // For each stream, we collect a number of samples
         for (int j = 0; j < SAMPLES_TO_COLLECT; j++) {
-	    
+
             // skip a number of samples
             for (int k = 0; k < samples_to_skip; k++) {
                 rnum = rand_r((unsigned int *) &rnum);
             }
-	    
+
             // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
             key = rnum % RAND_NUM_UPPER_BOUND;
-	    
-	    
+
+            // Entering critical section, lock
+            pthread_mutex_lock(&mutex);
+
             if (!(s = h.lookup(key))) {
-		
+
                 // insert a new element for it into the hash table
                 s = new sample(key);
-                h_table[ith_slice].insert(s);
+                h.insert(s);
             }
+            // increment the count for the sample
             s->count++;
-	}	
+            // exiting the critical section
+            pthread_mutex_unlock(&mutex);
+        }
     }
-    // delete(temp);
     return nullptr;
-}
+} 
