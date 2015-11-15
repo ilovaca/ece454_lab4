@@ -38,6 +38,10 @@ public:
     void cleanup();
 
     Ele *lookup_and_insert_if_absent(Keytype key);
+    
+    Ele *lookup_with_lock(Keytype the_key);
+
+    void insert_with_lock(Ele *e) ;
 
     void merge(hash *other);
 };
@@ -129,6 +133,15 @@ hash<Ele, Keytype>::lookup(Keytype the_key) {
 }
 
 template<class Ele, class Keytype>
+Ele *
+hash<Ele, Keytype>::lookup_with_lock(Keytype the_key) {
+    list<Ele, Keytype> *l;
+
+    l = &entries[HASH_INDEX(the_key, my_size_mask)];
+    return l->lookup_with_lock(the_key);
+}
+
+template<class Ele, class Keytype>
 void
 hash<Ele, Keytype>::print(FILE *f) {
     unsigned i;
@@ -160,6 +173,12 @@ template<class Ele, class Keytype>
 void
 hash<Ele, Keytype>::insert(Ele *e) {
     entries[HASH_INDEX(e->key(), my_size_mask)].push(e);
+}
+
+template<class Ele, class Keytype>
+void
+hash<Ele, Keytype>::insert_with_lock(Ele *e) {
+    entries[HASH_INDEX(e->key(), my_size_mask)].push_with_lock(e);
 }
 
 

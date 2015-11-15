@@ -31,9 +31,6 @@ unsigned samples_to_skip;
 // the worker function that completes a portion of the samples
 void *worker_function(void *ith_slice);
 
-// global mutex lock
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-
 class sample;
 
 class sample {
@@ -131,19 +128,13 @@ void *worker_function(void *ith_thread) {
             // force the sample to be within the range of 0..RAND_NUM_UPPER_BOUND-1
             key = rnum % RAND_NUM_UPPER_BOUND;
 
-            // Entering critical section, lock
-            pthread_mutex_lock(&mutex);
 
-            if (!(s = h.lookup(key))) {
-
+            if (!(s = h.lookup_with_lock(key))) {
                 // insert a new element for it into the hash table
                 s = new sample(key);
-                h.insert(s);
+                h.insert_with_lock(s);
             }
-            // increment the count for the sample
             s->count++;
-            // exiting the critical section
-            pthread_mutex_unlock(&mutex);
         }
     }
     return nullptr;

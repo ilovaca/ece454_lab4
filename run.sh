@@ -37,7 +37,7 @@ then
 	randtrack_reduction $NUM_THREADS $SAMPLES_TO_SKIP > rt_reduction.out
 	sort -n rt_reduction.out > rt_reduction.outs
 	diff rt1.outs rt_reduction.outs > diff4.out
-elif [ "$1" = "reduction" ]
+elif [ "$1" = "element" ]
 then
 	echo -e "Element lock version, NUM_THREADS == $NUM_THREADS SAMPLES_TO_SKIP == $SAMPLES_TO_SKIP"
 	randtrack_element_lock $NUM_THREADS $SAMPLES_TO_SKIP > rt_element_lock.out

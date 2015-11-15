@@ -1,6 +1,7 @@
 
 CC = g++-4.9
 CFLAGS = -O3 -std=c++11
+DEBUG = -g -std=c++11
 PTHREAD_ENABLE = -lpthread -pthread
 TM_ENABLE = -fgnu-tm
 
@@ -20,5 +21,7 @@ randtrack_element_lock:  list.h hash.h defs.h randtrack_element_lock.cc
 randtrack_reduction:  list.h hash.h defs.h randtrack_reduction.cc
 	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_reduction.cc -o randtrack_reduction
 
+randtrack_element_lock_debug:  list.h hash.h defs.h randtrack_element_lock.cc
+	$(CC) $(DEBUG) $(PTHREAD_ENABLE) randtrack_element_lock.cc -o randtrack_element_lock
 clean:
 	rm -f *.o randtrack randtrack_global_lock randtrack_tm randtrack_list_lock

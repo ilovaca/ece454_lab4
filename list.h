@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <pthread.h>
+#include <vector>
 template<class Ele, class Keytype>
 class list;
 
@@ -10,6 +12,8 @@ template<class Ele, class Keytype>
 class list {
 private:
     Ele *my_head;
+    std::vector<pthread_mutex_t> element_mutex_v;
+    pthread_mutex_t head_lock;
     unsigned long long my_num_ele;
 public:
     list() {
@@ -25,7 +29,11 @@ public:
 
     Ele *lookup(Keytype the_key);
 
+    Ele *lookup_with_lock(Keytype the_key);
+
     void push(Ele *e);
+
+    void push_with_lock(Ele *e);
 
     Ele *pop();
 
@@ -59,6 +67,7 @@ void
 list<Ele, Keytype>::setup() {
     my_head = NULL;
     my_num_ele = 0;
+    head_lock = PTHREAD_MUTEX_INITIALIZER;
 }
 
 template<class Ele, class Keytype>
@@ -70,14 +79,32 @@ list<Ele, Keytype>::push(Ele *e) {
 }
 
 template<class Ele, class Keytype>
+void
+list<Ele, Keytype>::push_with_lock(Ele *e) {
+    pthread_mutex_lock(&head_lock);
+    e->next = my_head;
+    my_head = e;
+    pthread_mutex_unlock(&head_lock);
+    pthread_mutex_t mutex;
+    element_mutex_v.push_back(mutex);
+    element_mutex_v.back() = PTHREAD_MUTEX_INITIALIZER;
+    my_num_ele++;
+}
+
+
+template<class Ele, class Keytype>
 Ele *
 list<Ele, Keytype>::pop() {
+    // we need to lock the head element before we pop it
+    pthread_mutex_lock(&element_mutex_v[my_num_ele - 1]);
     Ele *e;
     e = my_head;
     if (e) {
         my_head = e->next;
         my_num_ele--;
     }
+    pthread_mutex_unlock(&element_mutex_v[my_num_ele - 1]);
+    element_mutex_v.pop_back();
     return e;
 }
 
@@ -103,6 +130,24 @@ list<Ele, Keytype>::lookup(Keytype the_key) {
     return e_tmp;
 }
 
+
+
+template<class Ele, class Keytype>
+Ele *
+list<Ele, Keytype>::lookup_with_lock(Keytype the_key) {
+    // first lock head
+    pthread_mutex_lock(&element_mutex_v.back());
+    Ele *e_tmp = my_head;
+    pthread_mutex_unlock(&element_mutex_v.back());
+    int i = my_num_ele;
+    while (e_tmp && (e_tmp->key() != the_key)) {
+        pthread_mutex_lock(&element_mutex_v[i-1]);
+        e_tmp = e_tmp->next;
+        pthread_mutex_unlock(&element_mutex_v[i-1]);
+        i--;
+    }
+    return e_tmp;
+}
 template<class Ele, class Keytype>
 void
 list<Ele, Keytype>::cleanup() {
