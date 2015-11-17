@@ -1,5 +1,5 @@
 #!/bin/bash
-make clean
+# make clean
 make randtrack
 make randtrack_global_lock
 make randtrack_list_lock
@@ -10,8 +10,8 @@ NUM_THREADS=4
 SAMPLES_TO_SKIP=50
 
 # base 
-# randtrack 1 $SAMPLES_TO_SKIP > rt1.out
-# sort -n rt1.out > rt1.outs
+randtrack 1 $SAMPLES_TO_SKIP > rt1.out
+sort -n rt1.out > rt1.outs
 
 if [ "$1" = "global" ] 
 then

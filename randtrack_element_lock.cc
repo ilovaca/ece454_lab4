@@ -3,7 +3,7 @@
 #include <pthread.h>
 #include <iostream>
 #include "defs.h"
-#include "hash.h"
+#include "hash_element_lock.h"
 
 #define SAMPLES_TO_COLLECT   10000000
 #define RAND_NUM_UPPER_BOUND   100000
@@ -136,14 +136,15 @@ void *worker_function(void *ith_thread) {
             key = rnum % RAND_NUM_UPPER_BOUND;
 
 
-            h.lookup_and_insert_element_lock(key);
+            // h.lookup_and_insert_element_lock(key);
 
-            // if (!(s = h.lookup_with_lock(key))) {
-            //     // this newly created sample is private to each thread
-            //     s = new sample(key);
-            //     h.insert_with_lock(s);
-            // }
-            // s->incre_count_with_lock();
+                h.lock_list(key);
+            if (!(s = h.lookup(key))) {
+                s = new sample(key);
+                h.insert(s);
+            }
+                h.unlock_list(key);
+            s->incre_count_with_lock();
         }
     }
     return nullptr;

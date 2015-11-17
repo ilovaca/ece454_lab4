@@ -18,7 +18,7 @@ randtrack_list_lock: list.h hash.h defs.h randtrack_list_lock.cc
 	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_list_lock.cc -o randtrack_list_lock
 randtrack_reduction:  list.h hash.h defs.h randtrack_reduction.cc
 	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_reduction.cc -o randtrack_reduction
-randtrack_element_lock:  list.h hash.h defs.h randtrack_element_lock.cc
+randtrack_element_lock:  list.h hash_element_lock.h defs.h randtrack_element_lock.cc
 	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_element_lock.cc -o randtrack_element_lock
 
 randtrack_element_lock_debug:  list.h hash.h defs.h randtrack_element_lock.cc
