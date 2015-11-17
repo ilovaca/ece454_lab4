@@ -23,7 +23,6 @@ private:
     list<Ele, Keytype> *get_list(unsigned the_idx);
 
 public:
-    pthread_cond_t *list_condition_vars;
     pthread_mutex_t *list_locks;
 
     void setup(unsigned the_size_log = 5);
@@ -39,36 +38,13 @@ public:
     void cleanup();
 
     Ele *lookup_and_insert_if_absent(Keytype key);
-    
-    Ele *lookup_with_lock(Keytype the_key);
 
     void insert_with_lock(Ele *e) ;
 
     void merge(hash *other);
-    void lookup_and_insert_element_lock(Keytype key);
 
 };
 
-
-template<class Ele, class Keytype>
-void hash<Ele, Keytype>::lookup_and_insert_element_lock(Keytype key) {
-    unsigned list_index = HASH_INDEX(key, my_size_mask);
-    auto kp = entries[list_index].lookup(key);
-    // entires[list_index].lookup_with_lock(key);
-    if (kp == nullptr) {
-        // key does not exist, we need to lock the entire list and insert it
-        pthread_mutex_lock(&list_locks[list_index]);
-        kp = new Ele(key);
-        entries[list_index].push(kp);
-        kp->incre_count_with_lock();
-        // we've done the insertion, we sigal the lookup threads to run
-        // pthread_cond_signal(&list_condition_vars[list_index]);
-        pthread_mutex_unlock(&list_locks[list_index]);
-    } else {
-        // key exists we just increment the counter
-        kp->incre_count_with_lock();
-    }
-}
 
 
 template<class Ele, class Keytype>
@@ -132,11 +108,9 @@ hash<Ele, Keytype>::setup(unsigned the_size_log) {
     entries = new list<Ele, Keytype>[my_size];
     // we will have a lock for each of the lists in the hashtable
     list_locks = new pthread_mutex_t[my_size];
-    list_condition_vars = new pthread_cond_t[my_size];
     // initialize all locks
     for (int i = 0; i < my_size; i++) {
         list_locks[i] = PTHREAD_MUTEX_INITIALIZER;
-        list_condition_vars[i] = PTHREAD_COND_INITIALIZER;
     }
 }
 
@@ -159,14 +133,6 @@ hash<Ele, Keytype>::lookup(Keytype the_key) {
     return l->lookup(the_key);
 }
 
-template<class Ele, class Keytype>
-Ele *
-hash<Ele, Keytype>::lookup_with_lock(Keytype the_key) {
-    list<Ele, Keytype> *l;
-
-    l = &entries[HASH_INDEX(the_key, my_size_mask)];
-    return l->lookup_with_lock(the_key);
-}
 
 template<class Ele, class Keytype>
 void

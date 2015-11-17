@@ -1,5 +1,5 @@
 #!/bin/bash
-# make clean
+make clean
 make randtrack
 make randtrack_global_lock
 make randtrack_list_lock
@@ -43,4 +43,25 @@ then
 	randtrack_element_lock $NUM_THREADS $SAMPLES_TO_SKIP > rt_element_lock.out
 	sort -n rt_element_lock.out > rt_element_lock.outs
 	diff rt1.outs rt_element_lock.outs > diff5.out
+
+elif [ "$1" = "all" ]
+then
+	echo -e "running all versions, NUM_THREADS == $NUM_THREADS SAMPLES_TO_SKIP == $SAMPLES_TO_SKIP"
+	randtrack_global_lock $NUM_THREADS $SAMPLES_TO_SKIP > rt_global.out
+	sort -n rt_global.out > rt_global.outs
+	diff rt1.outs rt_global.outs > diff1.out
+	randtrack_tm $NUM_THREADS $SAMPLES_TO_SKIP > rt_tm.out
+	sort -n rt_tm.out > rt_tm.outs
+	diff rt1.outs rt_tm.outs > diff2.out
+	randtrack_list_lock $NUM_THREADS $SAMPLES_TO_SKIP > rt_list.out
+	sort -n rt_list.out > rt_list.outs
+	diff rt1.outs rt_list.outs > diff3.out
+	randtrack_reduction $NUM_THREADS $SAMPLES_TO_SKIP > rt_reduction.out
+	sort -n rt_reduction.out > rt_reduction.outs
+	diff rt1.outs rt_reduction.outs > diff4.out
+	randtrack_element_lock $NUM_THREADS $SAMPLES_TO_SKIP > rt_element_lock.out
+	sort -n rt_element_lock.out > rt_element_lock.outs
+	diff rt1.outs rt_element_lock.outs > diff5.out
+
 fi
+
