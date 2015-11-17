@@ -5,7 +5,7 @@ make randtrack_global_lock
 make randtrack_list_lock
 make randtrack_tm
 make randtrack_reduction
-# make randtrack_element_lock
+make randtrack_element_lock
 NUM_THREADS=4
 SAMPLES_TO_SKIP=50
 

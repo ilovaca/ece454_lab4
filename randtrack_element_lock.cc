@@ -38,13 +38,20 @@ class sample {
 public:
     sample *next;
     unsigned count;
-
+    pthread_mutex_t lock;
     sample(unsigned the_key) {
         my_key = the_key;
         count = 0;
+        lock = PTHREAD_MUTEX_INITIALIZER;
     };
 
     unsigned key() { return my_key; }
+
+    void incre_count_with_lock() {
+        pthread_mutex_lock(&lock);
+        count++;
+        pthread_mutex_unlock(&lock);
+    }
 
     void print(FILE *f) { printf("%d %d\n", my_key, count); }
 };
@@ -129,12 +136,14 @@ void *worker_function(void *ith_thread) {
             key = rnum % RAND_NUM_UPPER_BOUND;
 
 
-            if (!(s = h.lookup_with_lock(key))) {
-                // this newly created sample is private to each thread
-                s = new sample(key);
-                h.insert_with_lock(s);
-            }
-            s->count++;
+            h.lookup_and_insert_element_lock(key);
+
+            // if (!(s = h.lookup_with_lock(key))) {
+            //     // this newly created sample is private to each thread
+            //     s = new sample(key);
+            //     h.insert_with_lock(s);
+            // }
+            // s->incre_count_with_lock();
         }
     }
     return nullptr;

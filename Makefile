@@ -16,10 +16,10 @@ randtrack_tm: list.h hash.h defs.h randtrack_tm.cc
 	$(CC) $(CFLAGS) $(TM_ENABLE) $(PTHREAD_ENABLE) randtrack_tm.cc -o randtrack_tm
 randtrack_list_lock: list.h hash.h defs.h randtrack_list_lock.cc
 	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_list_lock.cc -o randtrack_list_lock
-randtrack_element_lock:  list.h hash.h defs.h randtrack_element_lock.cc
-	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_element_lock.cc -o randtrack_element_lock
 randtrack_reduction:  list.h hash.h defs.h randtrack_reduction.cc
 	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_reduction.cc -o randtrack_reduction
+randtrack_element_lock:  list.h hash.h defs.h randtrack_element_lock.cc
+	$(CC) $(CFLAGS) $(PTHREAD_ENABLE) randtrack_element_lock.cc -o randtrack_element_lock
 
 randtrack_element_lock_debug:  list.h hash.h defs.h randtrack_element_lock.cc
 	$(CC) $(DEBUG) $(PTHREAD_ENABLE) randtrack_element_lock.cc -o randtrack_element_lock
